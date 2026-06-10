@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShotGloss — Make your screenshots gorgeous</title>
+<meta name="description" content="Turn plain screenshots into beautiful, share-ready images with gradient backgrounds, rounded corners and soft shadows. Free, in your browser, no upload.">
+<style>
+  :root {
+    --bg: #0d1017;
+    --panel: #161b26;
+    --panel2: #1d2433;
+    --border: #2a3347;
+    --text: #e8ecf4;
+    --muted: #8b96ab;
+    --accent: #6c8cff;
+    --accent2: #9b6cff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo {
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .logo span {
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .pro-btn {
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    color: #fff;
+    border: none;
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  .pro-btn:hover { opacity: .88; }
+  main {
+    flex: 1;
+    display: flex;
+    gap: 0;
+    min-height: 0;
+  }
+  .stage {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    min-width: 0;
+    background:
+      linear-gradient(45deg, #11141c 25%, transparent 25%, transparent 75%, #11141c 75%),
+      linear-gradient(45deg, #11141c 25%, transparent 25%, transparent 75%, #11141c 75%);
+    background-size: 28px 28px;
+    background-position: 0 0, 14px 14px;
+    background-color: #0f1219;
+  }
+  #preview {
+    max-width: 100%;
+    max-height: calc(100vh - 140px);
+    border-radius: 10px;
+    box-shadow: 0 18px 60px rgba(0,0,0,.5);
+    display: none;
+  }
+  .dropzone {
+    border: 2px dashed var(--border);
+    border-radius: 16px;
+    padding: 70px 60px;
+    text-align: center;
+    color: var(--muted);
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    max-width: 480px;
+  }
+  .dropzone:hover, .dropzone.over {
+    border-color: var(--accent);
+    background: rgba(108,140,255,.05);
+  }
+  .dropzone .big { font-size: 42px; margin-bottom: 14px; }
+  .dropzone h2 { color: var(--text); font-size: 19px; margin-bottom: 8px; font-weight: 600; }
+  .dropzone p { font-size: 14px; line-height: 1.6; }
+  .dropzone kbd {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 1px 7px;
+    font-size: 12px;
+    font-family: inherit;
+  }
+  .sample-link {
+    display: inline-block;
+    margin-top: 18px;
+    color: var(--accent);
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  aside {
+    width: 300px;
+    flex-shrink: 0;
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    padding: 22px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .ctrl label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+  }
+  .ctrl label output { color: var(--text); font-weight: 500; }
+  .swatches {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .swatch {
+    aspect-ratio: 1;
+    border-radius: 10px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform .12s, border-color .12s;
+  }
+  .swatch:hover { transform: scale(1.07); }
+  .swatch.active { border-color: #fff; }
+  input[type=range] {
+    width: 100%;
+    accent-color: var(--accent);
+  }
+  .dl-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    width: 100%;
+    padding: 13px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  .dl-btn:hover { opacity: .88; }
+  .dl-btn:disabled { opacity: .35; cursor: default; }
+  .pro-card {
+    background: linear-gradient(135deg, rgba(108,140,255,.12), rgba(155,108,255,.12));
+    border: 1px solid rgba(108,140,255,.35);
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--muted);
+  }
+  .pro-card strong { color: var(--text); display: block; margin-bottom: 6px; font-size: 14px; }
+  .pro-card button {
+    margin-top: 12px;
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 9px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .pro-card button:hover { background: rgba(108,140,255,.1); }
+  .modal-bg {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.65);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 420px;
+    margin: 20px;
+    text-align: center;
+  }
+  .modal .emoji { font-size: 40px; margin-bottom: 14px; }
+  .modal h3 { font-size: 19px; margin-bottom: 12px; }
+  .modal p { color: var(--muted); font-size: 14px; line-height: 1.7; margin-bottom: 20px; }
+  .modal button {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 10px 28px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  footer {
+    padding: 12px 28px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+  }
+  @media (max-width: 760px) {
+    main { flex-direction: column; }
+    aside { width: 100%; border-left: none; border-top: 1px solid var(--border); }
+    .stage { padding: 18px; }
+    #preview { max-height: 48vh; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Shot<span>Gloss</span></div>
+  <button class="pro-btn" onclick="openModal()">Upgrade to Pro — $6/mo</button>
+</header>
+
+<main>
+  <div class="stage" id="stage">
+    <div class="dropzone" id="dropzone">
+      <div class="big">🖼️</div>
+      <h2>Drop a screenshot here</h2>
+      <p>or click to browse · or just press <kbd>⌘V</kbd> / <kbd>Ctrl+V</kbd> to paste<br>
+      Everything runs in your browser — nothing is uploaded.</p>
+      <span class="sample-link" id="sampleLink">No screenshot handy? Try a sample →</span>
+    </div>
+    <canvas id="preview"></canvas>
+  </div>
+
+  <aside>
+    <div class="ctrl">
+      <label>Background</label>
+      <div class="swatches" id="swatches"></div>
+    </div>
+    <div class="ctrl">
+      <label>Padding <output id="padOut">12%</output></label>
+      <input type="range" id="pad" min="0" max="30" value="12">
+    </div>
+    <div class="ctrl">
+      <label>Corner radius <output id="radOut">16</output></label>
+      <input type="range" id="rad" min="0" max="60" value="16">
+    </div>
+    <div class="ctrl">
+      <label>Shadow <output id="shOut">50%</output></label>
+      <input type="range" id="sh" min="0" max="100" value="50">
+    </div>
+    <button class="dl-btn" id="dl" disabled>⬇ Download PNG</button>
+    <div class="pro-card">
+      <strong>✨ ShotGloss Pro</strong>
+      Remove the watermark, export 4K &amp; transparent PNG, batch-process 50 shots at once, custom brand backgrounds.
+      <button onclick="openModal()">See Pro plans</button>
+    </div>
+  </aside>
+</main>
+
+<footer>
+  <span>© 2026 ShotGloss</span>
+  <span>Made for makers who ship</span>
+</footer>
+
+<div class="modal-bg" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="emoji">🚧</div>
+    <h3>This is a live demo</h3>
+    <p>Payments are intentionally disabled. In the real product this button opens a Stripe checkout — the customer pays $6/month and Pro unlocks instantly, with no human involved at any step.</p>
+    <button onclick="closeModal()">Got it</button>
+  </div>
+</div>
+
+<input type="file" id="file" accept="image/*" hidden>
+
+<script>
+const GRADIENTS = [
+  ['#667eea', '#764ba2'],
+  ['#f093fb', '#f5576c'],
+  ['#4facfe', '#00f2fe'],
+  ['#43e97b', '#38f9d7'],
+  ['#fa709a', '#fee140'],
+  ['#30cfd0', '#330867'],
+  ['#ff9a9e', '#fecfef'],
+  ['#1e3c72', '#2a5298'],
+];
+
+let img = null;
+let gradIdx = 0;
+
+const canvas = document.getElementById('preview');
+const ctx = canvas.getContext('2d');
+const dropzone = document.getElementById('dropzone');
+const dlBtn = document.getElementById('dl');
+const padIn = document.getElementById('pad');
+const radIn = document.getElementById('rad');
+const shIn = document.getElementById('sh');
+
+// build swatches
+const sw = document.getElementById('swatches');
+GRADIENTS.forEach((g, i) => {
+  const d = document.createElement('div');
+  d.className = 'swatch' + (i === 0 ? ' active' : '');
+  d.style.background = `linear-gradient(135deg, ${g[0]}, ${g[1]})`;
+  d.onclick = () => {
+    gradIdx = i;
+    document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+    d.classList.add('active');
+    render();
+  };
+  sw.appendChild(d);
+});
+
+function roundRect(c, x, y, w, h, r) {
+  r = Math.min(r, w / 2, h / 2);
+  c.beginPath();
+  c.moveTo(x + r, y);
+  c.arcTo(x + w, y, x + w, y + h, r);
+  c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r);
+  c.arcTo(x, y, x + w, y, r);
+  c.closePath();
+}
+
+function render() {
+  if (!img) return;
+  const base = Math.max(img.width, img.height);
+  const pad = Math.round(base * padIn.value / 100);
+  const w = img.width + pad * 2;
+  const h = img.height + pad * 2;
+  canvas.width = w;
+  canvas.height = h;
+
+  const [c1, c2] = GRADIENTS[gradIdx];
+  const g = ctx.createLinearGradient(0, 0, w, h);
+  g.addColorStop(0, c1);
+  g.addColorStop(1, c2);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, w, h);
+
+  const r = radIn.value * base / 1000;
+  const shadow = shIn.value / 100;
+
+  if (shadow > 0 && pad > 0) {
+    ctx.save();
+    ctx.shadowColor = `rgba(0,0,0,${0.25 + shadow * 0.35})`;
+    ctx.shadowBlur = base * 0.06 * shadow;
+    ctx.shadowOffsetY = base * 0.018 * shadow;
+    roundRect(ctx, pad, pad, img.width, img.height, r);
+    ctx.fillStyle = '#000';
+    ctx.fill();
+    ctx.restore();
+  }
+
+  ctx.save();
+  roundRect(ctx, pad, pad, img.width, img.height, r);
+  ctx.clip();
+  ctx.drawImage(img, pad, pad);
+  ctx.restore();
+
+  // free-tier watermark
+  const fs = Math.max(13, Math.round(base * 0.018));
+  ctx.font = `600 ${fs}px -apple-system, sans-serif`;
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  ctx.textAlign = 'right';
+  ctx.fillText('shotgloss', w - fs * 0.8, h - fs * 0.8);
+
+  dropzone.style.display = 'none';
+  canvas.style.display = 'block';
+  dlBtn.disabled = false;
+}
+
+function loadImage(src) {
+  const im = new Image();
+  im.onload = () => { img = im; render(); };
+  im.src = src;
+}
+
+function handleFile(f) {
+  if (!f || !f.type.startsWith('image/')) return;
+  const rd = new FileReader();
+  rd.onload = e => loadImage(e.target.result);
+  rd.readAsDataURL(f);
+}
+
+dropzone.onclick = e => {
+  if (e.target.id === 'sampleLink') return;
+  document.getElementById('file').click();
+};
+document.getElementById('file').onchange = e => handleFile(e.target.files[0]);
+
+const stage = document.getElementById('stage');
+stage.ondragover = e => { e.preventDefault(); dropzone.classList.add('over'); };
+stage.ondragleave = () => dropzone.classList.remove('over');
+stage.ondrop = e => {
+  e.preventDefault();
+  dropzone.classList.remove('over');
+  handleFile(e.dataTransfer.files[0]);
+};
+
+document.addEventListener('paste', e => {
+  for (const item of e.clipboardData.items) {
+    if (item.type.startsWith('image/')) { handleFile(item.getAsFile()); return; }
+  }
+});
+
+[padIn, radIn, shIn].forEach(el => el.oninput = () => {
+  document.getElementById('padOut').textContent = padIn.value + '%';
+  document.getElementById('radOut').textContent = radIn.value;
+  document.getElementById('shOut').textContent = shIn.value + '%';
+  render();
+});
+
+dlBtn.onclick = () => {
+  const a = document.createElement('a');
+  a.download = 'shotgloss.png';
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+};
+
+// generate a fake app screenshot for the sample
+document.getElementById('sampleLink').onclick = e => {
+  e.stopPropagation();
+  const c = document.createElement('canvas');
+  c.width = 1200; c.height = 760;
+  const x = c.getContext('2d');
+  x.fillStyle = '#ffffff'; x.fillRect(0, 0, 1200, 760);
+  // browser chrome
+  x.fillStyle = '#f1f3f6'; x.fillRect(0, 0, 1200, 64);
+  ['#ff5f57', '#febc2e', '#28c840'].forEach((col, i) => {
+    x.fillStyle = col; x.beginPath(); x.arc(34 + i * 32, 32, 9, 0, 7); x.fill();
+  });
+  x.fillStyle = '#e2e6ec';
+  roundRect(x, 160, 16, 880, 32, 16); x.fill();
+  x.fillStyle = '#9aa3b2'; x.font = '15px -apple-system, sans-serif'; x.textAlign = 'center';
+  x.fillText('app.example.com/dashboard', 600, 37);
+  // sidebar
+  x.fillStyle = '#11131a'; x.fillRect(0, 64, 230, 696);
+  x.fillStyle = '#6c8cff'; roundRect(x, 20, 96, 190, 40, 9); x.fill();
+  x.fillStyle = '#2a2f3d';
+  for (let i = 1; i < 6; i++) { roundRect(x, 20, 96 + i * 56, 190, 40, 9); x.fill(); }
+  // cards
+  x.textAlign = 'left';
+  x.fillStyle = '#11131a'; x.font = '700 30px -apple-system, sans-serif';
+  x.fillText('Good morning, Alex', 270, 130);
+  const stats = [['Revenue', '$12,480', '#43e97b'], ['Users', '3,214', '#6c8cff'], ['Churn', '1.8%', '#fa709a']];
+  stats.forEach((s, i) => {
+    const cx = 270 + i * 300;
+    x.fillStyle = '#f6f7fa'; roundRect(x, cx, 160, 270, 130, 14); x.fill();
+    x.fillStyle = '#8b94a6'; x.font = '15px -apple-system, sans-serif'; x.fillText(s[0], cx + 22, 196);
+    x.fillStyle = '#11131a'; x.font = '700 34px -apple-system, sans-serif'; x.fillText(s[1], cx + 22, 242);
+    x.fillStyle = s[2]; roundRect(x, cx, 160, 6, 130, 3); x.fill();
+  });
+  // chart
+  x.fillStyle = '#f6f7fa'; roundRect(x, 270, 320, 870, 400, 14); x.fill();
+  x.strokeStyle = '#6c8cff'; x.lineWidth = 4; x.beginPath();
+  const pts = [620, 600, 560, 580, 520, 470, 490, 430, 380, 400, 340, 360];
+  pts.forEach((p, i) => { const px = 310 + i * 72; i ? x.lineTo(px, p) : x.moveTo(px, p); });
+  x.stroke();
+  x.lineTo(310 + 11 * 72, 670); x.lineTo(310, 670); x.closePath();
+  x.fillStyle = 'rgba(108,140,255,0.12)'; x.fill();
+  loadImage(c.toDataURL());
+};
+
+function openModal() { document.getElementById('modal').classList.add('open'); }
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+</script>
+</body>
+</html>
