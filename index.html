@@ -231,6 +231,8 @@
     font-size: 12px;
     display: flex;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
   }
   @media (max-width: 760px) {
     main { flex-direction: column; }
@@ -288,6 +290,15 @@
 <footer>
   <span>© 2026 ShotGloss</span>
   <span>Made for makers who ship</span>
+  <span>Part of a family of one-time-purchase tools:
+    <a href="https://fillsign.app" style="color:inherit">FillSign</a> ·
+    <a href="https://robin0725.github.io/foreverqr/" style="color:inherit">ForeverQR</a> ·
+    <a href="https://robin0725.github.io/subkit/" style="color:inherit">SubKit</a> ·
+    <a href="https://robin0725.github.io/clipgif/" style="color:inherit">ClipGIF</a> ·
+    <a href="https://robin0725.github.io/mailsig/" style="color:inherit">MailSig</a> ·
+    <a href="https://robin0725.github.io/rentslip/" style="color:inherit">RentSlip</a> ·
+    <a href="https://robin0725.github.io/menddays/" style="color:inherit">MendDays</a>
+  </span>
 </footer>
 
 <div class="modal-bg" id="modal" onclick="if(event.target===this)closeModal()">
